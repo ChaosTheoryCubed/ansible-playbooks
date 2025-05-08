@@ -20,6 +20,11 @@
     go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
     go install github.com/cosmtrek/air@v1.42.0
+    # These are the latest versions of gopls, dlv, and staticcheck which work with Go 1.20.
+    # Update these to @latest once the product has moved to a supported version of Go.
+    go install golang.org/x/tools/gopls@v0.15.3
+    go install github.com/go-delve/delve/cmd/dlv@v1.22.1
+    go install honnef.co/go/tools/cmd/staticcheck@v0.4.7
   args:
     chdir: "{{ go_project_path }}"
     executable: /bin/zsh
