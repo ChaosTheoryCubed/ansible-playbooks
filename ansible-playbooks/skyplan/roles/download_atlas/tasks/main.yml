@@ -5,6 +5,7 @@
   ignore_errors: true
 
 - name: Install Atlas CLI via install script
+  become: true
   shell: curl -sSf https://atlasgo.sh | sh
   args:
     executable: /bin/zsh

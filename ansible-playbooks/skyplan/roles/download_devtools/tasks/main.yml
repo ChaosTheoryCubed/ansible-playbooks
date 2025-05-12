@@ -101,3 +101,19 @@
   when:
     - ansible_facts['os_family'] == 'Darwin'
     - ctop_check.rc != 0
+
+# POSTMAN 
+- name: Check if Postman is installed
+  command: brew list postman 
+  register: postman_check
+  failed_when: false
+  changed_when: false
+  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: Install Postman
+  homebrew:
+    name: postman 
+    state: present
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - postman_check.rc != 0
