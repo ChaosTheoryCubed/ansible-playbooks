@@ -102,9 +102,9 @@
     - ansible_facts['os_family'] == 'Darwin'
     - ctop_check.rc != 0
 
-# POSTMAN 
+# POSTMAN
 - name: Check if Postman is installed
-  command: brew list postman 
+  command: brew list postman
   register: postman_check
   failed_when: false
   changed_when: false
@@ -112,8 +112,112 @@
 
 - name: Install Postman
   homebrew:
-    name: postman 
+    name: postman
     state: present
   when:
     - ansible_facts['os_family'] == 'Darwin'
     - postman_check.rc != 0
+
+- name: Add Apollo Info
+  ansible.builtin.copy:
+    dest: "{{ansible_env.HOME}}/work/Readme.md"
+    content: |
+      # Apollo Setup
+
+      First go to: https://studio.apollographql.com/sandbox/explorer
+
+      Setup an account if you don't already have one, you can link it with your
+      github account.
+
+      ## For Local Development
+      1. Create a new connection
+      2. Set the url to: http://localhost:8080/graphql
+      3. Add shared headers (shouldn't have to if already added shared headers)
+        1. sky-app / portal
+        2. Authorization / Bearer {% raw %}{{ token }}{% endraw %}
+      4. Save
+      5. You will then add the following preflight script
+
+      ```js
+      const ENDPOINT= 'https://localhost:8080/graphql';
+      const { data: { login: { token } } } = await explorer.fetch(`${ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          'sky-app': 'portal',
+        },
+        body: JSON.stringify({
+          "query": "mutation Login($input: LoginInput!) { login(input: $input) {token}}",
+          "variables": {
+            "input": {
+              "username": "dparchment",
+              "password": "$kyvibe"
+            }
+          }
+        }),
+      }).then(response => response.json());
+
+      explorer.environment.set('token', token);
+      ```
+
+      ## For Dev Development
+      1. Create a new connection
+      2. Set the url to: http://api.dev.skyvibe.io/graphql
+      3. Add shared headers (shouldn't have to if already added shared headers)
+        1. sky-app / portal
+        2. Authorization / Bearer {% raw %}{{ token }}{% endraw %}
+      4. Save
+      5. You will then add the following preflight script
+
+      ```js
+      const ENDPOINT= 'https://api.dev.skyvibe.io/graphql';
+      const { data: { login: { token } } } = await explorer.fetch(`${ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          'sky-app': 'portal',
+        },
+        body: JSON.stringify({
+          "query": "mutation Login($input: LoginInput!) { login(input: $input) {token}}",
+          "variables": {
+            "input": {
+              "username": "dparchment",
+              "password": "$kyvibe"
+            }
+          }
+        }),
+      }).then(response => response.json());
+
+      explorer.environment.set('token', token);
+      ```
+
+      ## For Stage Development
+      1. Create a new connection
+      2. Set the url to: http://api.stage.skyvibe.io/graphql
+      3. Add shared headers (shouldn't have to if already added shared headers)
+        1. sky-app / portal
+        2. Authorization / Bearer {% raw %}{{ token }}{% endraw %}
+      4. Save
+      5. You will then add the following preflight script
+
+      ```js
+      const ENDPOINT= 'https://api.stage.skyvibe.io/graphql';
+      const { data: { login: { token } } } = await explorer.fetch(`${ENDPOINT}`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          'sky-app': 'portal',
+        },
+        body: JSON.stringify({
+          "query": "mutation Login($input: LoginInput!) { login(input: $input) {token}}",
+          "variables": {
+            "input": {
+              "username": "dparchment",
+              "password": "$kyvibe"
+            }
+          }
+        }),
+      }).then(response => response.json());
+
+      explorer.environment.set('token', token);
+      ```
