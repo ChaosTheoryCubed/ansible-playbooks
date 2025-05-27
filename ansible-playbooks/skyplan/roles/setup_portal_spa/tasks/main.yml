@@ -22,6 +22,9 @@
     mode: "0644"
 
 - name: Run npm install in portal-spa
-  shell: npm install --legacy-peer-deps
+  shell: |
+    source {{ zsh_file }}
+    cd {{ ansible_env.HOME }}/work/portal-spa
+    npm install --legacy-peer-deps
   args:
     chdir: "{{ ansible_env.HOME }}/work/portal-spa"
