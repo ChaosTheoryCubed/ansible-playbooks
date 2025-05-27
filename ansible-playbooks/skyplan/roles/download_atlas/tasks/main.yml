@@ -4,11 +4,16 @@
   register: atlas_check
   ignore_errors: true
 
-- name: Install Atlas CLI via install script
-  become: true
-  shell: curl -sSf https://atlasgo.sh | sh
-  args:
-    executable: /bin/zsh
+- name: Tap ariga/tap repository
+  homebrew_tap:
+    name: ariga/tap
+    state: present
+  when: atlas_check.rc != 0
+
+- name: Install Atlas CLI via Homebrew
+  homebrew:
+    name: ariga/tap/atlas
+    state: present
   when: atlas_check.rc != 0
 
 - name: Verify Atlas CLI is installed
