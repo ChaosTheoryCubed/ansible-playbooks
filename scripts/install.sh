@@ -66,6 +66,25 @@ for arg in "$@"; do
   esac
 done
 
+# -- Show What the Script Will Do --
+echo "📦 This script will:"
+echo " - Ensure Homebrew is installed (macOS only)"
+echo " - Install Python 3 if not already available"
+echo " - Install Ansible if not already available"
+echo " - Clone your ansible playbooks to $DOTFILES_DIR"
+echo " - Optionally run the Skyplan Ansible playbook"
+echo ""
+echo "ℹ️  You will be prompted for your sudo password when necessary."
+
+if [ "$AUTO_RUN" = false ] && [ "$DRY_RUN" = false ]; then
+  printf "\n❓ Do you want to continue? [y/N]: "
+  read -r CONTINUE
+  if [ "$CONTINUE" != "y" ] && [ "$CONTINUE" != "Y" ]; then
+    echo "❌ Aborted by user."
+    exit 0
+  fi
+fi
+
 # -- Step 1: Detect OS --
 OS="$(uname)"
 info "Detected OS: $OS"
