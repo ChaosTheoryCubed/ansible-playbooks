@@ -96,8 +96,14 @@ fi
 # 5. Clone dotfiles
 if [ ! -d "$DOTFILES_DIR" ]; then
   info "Cloning dotfiles to $DOTFILES_DIR..."
-  run "mkdir -p $(dirname "$DOTFILES_DIR")"
-  run "git clone \"$REPO_URL\" \"$DOTFILES_DIR\""
+  DOTFILES_PARENT="$(dirname "$DOTFILES_DIR")"
+  if [ "$DRY_RUN" = true ]; then
+    echo "DRY-RUN: mkdir -p \"$DOTFILES_PARENT\""
+    echo "DRY-RUN: git clone \"$REPO_URL\" \"$DOTFILES_DIR\""
+  else
+    mkdir -p "$DOTFILES_PARENT"
+    git clone "$REPO_URL" "$DOTFILES_DIR"
+fi
 else
   info "Dotfiles already exist at $DOTFILES_DIR"
 fi
