@@ -1,13 +1,32 @@
 #!/bin/sh
 set -eu
 
+# -- Permissions & Sudo Validation --
+if [ "$(id -u)" -eq 0 ]; then
+  echo "❌ Do NOT run this script with sudo or as root."
+  echo "   Instead, run it like this:"
+  echo "   curl -sSfL https://raw.githubusercontent.com/ChaosTheoryCubed/dotfiles/main/scripts/install.sh | sh"
+  exit 1
+fi
+
+if ! command -v sudo >/dev/null 2>&1; then
+  echo "❌ 'sudo' is required but not installed."
+  exit 1
+fi
+
+if ! sudo -v; then
+  echo "❌ You need sudo privileges to run this script."
+  exit 1
+fi
+
+# -- Configuration --
 REPO_URL="https://github.com/ChaosTheoryCubed/dotfiles.git"
 DOTFILES_DIR="$HOME/work/dotfiles"
 SKYPLAN_DIR="$DOTFILES_DIR/ansible-playbooks/skyplan"
-
 AUTO_RUN=false
 DRY_RUN=false
 
+# -- Helpers --
 info() {
   printf "\033[1;34m[INFO]\033[0m %s\n" "$@"
 }
@@ -29,7 +48,15 @@ EOF
   exit 0
 }
 
-# Parse arguments
+run() {
+  if [ "$DRY_RUN" = true ]; then
+    echo "DRY-RUN: $*"
+  else
+    eval "$@"
+  fi
+}
+
+# -- Parse Arguments --
 for arg in "$@"; do
   case "$arg" in
     --yes) AUTO_RUN=true ;;
@@ -39,32 +66,32 @@ for arg in "$@"; do
   esac
 done
 
-# Dry run helper
-run() {
-  if [ "$DRY_RUN" = true ]; then
-    echo "DRY-RUN: $*"
-  else
-    eval "$@"
-  fi
-}
-
-# 1. Detect OS
+# -- Step 1: Detect OS --
 OS="$(uname)"
 info "Detected OS: $OS"
 
-# 2. Install Homebrew (if on macOS)
+# -- Step 2: Install Homebrew (macOS only) --
 if [ "$OS" = "Darwin" ]; then
   if ! command -v brew >/dev/null 2>&1; then
     info "Installing Homebrew..."
-    run '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-    run 'eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"'
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
+
+  BREW_PREFIX="$(/opt/homebrew/bin/brew --prefix 2>/dev/null || /usr/local/bin/brew --prefix 2>/dev/null || true)"
+  BREW_ENV_LINE='eval "$('"$BREW_PREFIX"'/bin/brew shellenv)"'
+  ZSHENV_FILE="${ZDOTDIR:-$HOME/.config/zsh}/.zshenv"
+
+  if [ -n "$BREW_PREFIX" ] && ! grep -Fq "$BREW_ENV_LINE" "$ZSHENV_FILE" 2>/dev/null; then
+    echo "$BREW_ENV_LINE" >> "$ZSHENV_FILE"
+    info "Added brew shellenv to $ZSHENV_FILE"
+  fi
+
+  eval "$("$BREW_PREFIX/bin/brew" shellenv)"
 fi
 
-# 3. Install Python
+# -- Step 3: Install Python --
 if ! command -v python3 >/dev/null 2>&1; then
   info "Installing Python..."
-
   if [ "$OS" = "Darwin" ]; then
     run "brew install python"
   elif command -v apt >/dev/null 2>&1; then
@@ -77,14 +104,12 @@ if ! command -v python3 >/dev/null 2>&1; then
   fi
 fi
 
-# 4. Install Ansible
+# -- Step 4: Install Ansible --
 if ! command -v ansible >/dev/null 2>&1; then
   info "Installing Ansible..."
-
   if [ "$OS" = "Darwin" ]; then
     run "brew install ansible"
   elif command -v apt >/dev/null 2>&1; then
-    run "sudo apt update"
     run "sudo apt install -y ansible"
   elif command -v yum >/dev/null 2>&1; then
     run "sudo yum install -y ansible"
@@ -93,7 +118,7 @@ if ! command -v ansible >/dev/null 2>&1; then
   fi
 fi
 
-# 5. Clone dotfiles
+# -- Step 5: Clone dotfiles repo --
 if [ ! -d "$DOTFILES_DIR" ]; then
   info "Cloning dotfiles to $DOTFILES_DIR..."
   DOTFILES_PARENT="$(dirname "$DOTFILES_DIR")"
@@ -103,12 +128,12 @@ if [ ! -d "$DOTFILES_DIR" ]; then
   else
     mkdir -p "$DOTFILES_PARENT"
     git clone "$REPO_URL" "$DOTFILES_DIR"
-fi
+  fi
 else
   info "Dotfiles already exist at $DOTFILES_DIR"
 fi
 
-# 6. Prompt and optionally run Skyplan playbook
+# -- Step 6: Prompt to run Ansible playbook --
 cd "$SKYPLAN_DIR"
 info "Moved into $SKYPLAN_DIR"
 
