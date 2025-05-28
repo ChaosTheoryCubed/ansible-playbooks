@@ -1,6 +1,13 @@
 #!/bin/sh
 set -eu
 
+if [ ! -t 0 ]; then
+  echo "❌ This script must be run in an interactive shell (not piped)."
+  echo "   Use: sh -c \"\$(curl -fsSL <url>)\""
+  echo "   Or:  curl -fsSL <url> -o install.sh && sh install.sh"
+  exit 1
+fi
+
 # -- Permissions & Sudo Validation --
 if [ "$(id -u)" -eq 0 ]; then
   echo "❌ Do NOT run this script with sudo or as root."
