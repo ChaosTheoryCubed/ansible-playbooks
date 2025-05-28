@@ -1,9 +1,10 @@
 #!/bin/sh
 set -eu
 
+# -- Interactive shell validation --
 if [ ! -t 0 ]; then
   echo "❌ This script must be run in an interactive shell (not piped)."
-  echo "   Use: sh -c \"\$(curl -fsSL <url>)\""
+  echo "   Use: sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ChaosTheoryCubed/dotfiles/main/scripts/install.sh)\""
   echo "   Or:  curl -fsSL <url> -o install.sh && sh install.sh"
   exit 1
 fi
@@ -11,8 +12,8 @@ fi
 # -- Permissions & Sudo Validation --
 if [ "$(id -u)" -eq 0 ]; then
   echo "❌ Do NOT run this script with sudo or as root."
-  echo "   Instead, run it like this:"
-  echo "   curl -sSfL https://raw.githubusercontent.com/ChaosTheoryCubed/dotfiles/main/scripts/install.sh | sh"
+  echo "   Run it like this instead:"
+  echo "   sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ChaosTheoryCubed/dotfiles/main/scripts/install.sh)\""
   exit 1
 fi
 
@@ -73,7 +74,7 @@ for arg in "$@"; do
   esac
 done
 
-# -- Show What the Script Will Do --
+# -- Summary --
 echo "📦 This script will:"
 echo " - Ensure Homebrew is installed (macOS only)"
 echo " - Install Python 3 if not already available"
@@ -105,13 +106,18 @@ if [ "$OS" = "Darwin" ]; then
 
   BREW_PREFIX="$(/opt/homebrew/bin/brew --prefix 2>/dev/null || /usr/local/bin/brew --prefix 2>/dev/null || true)"
   BREW_ENV_LINE='eval "$('"$BREW_PREFIX"'/bin/brew shellenv)"'
-  ZSHENV_FILE="${ZDOTDIR:-$HOME/.config/zsh}/.zshenv"
+  ZPROFILE="$HOME/.zprofile"
 
-  if [ -n "$BREW_PREFIX" ] && ! grep -Fq "$BREW_ENV_LINE" "$ZSHENV_FILE" 2>/dev/null; then
-    echo "$BREW_ENV_LINE" >> "$ZSHENV_FILE"
-    info "Added brew shellenv to $ZSHENV_FILE"
+  # Ensure ~/.zprofile exists and contains brew shellenv
+  mkdir -p "$HOME"
+  touch "$ZPROFILE"
+  if ! grep -Fq "$BREW_ENV_LINE" "$ZPROFILE" 2>/dev/null; then
+    echo >> "$ZPROFILE"
+    echo "$BREW_ENV_LINE" >> "$ZPROFILE"
+    info "Added brew shellenv to $ZPROFILE"
   fi
 
+  # Activate Homebrew immediately
   eval "$("$BREW_PREFIX/bin/brew" shellenv)"
 fi
 
