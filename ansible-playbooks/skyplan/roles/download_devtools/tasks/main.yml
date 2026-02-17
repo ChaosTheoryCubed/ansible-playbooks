@@ -139,7 +139,7 @@
       5. You will then add the following preflight script
 
       ```js
-      const ENDPOINT= 'https://localhost:8080/graphql';
+      const ENDPOINT= 'http://localhost:8080/graphql';
       const { data: { login: { token } } } = await explorer.fetch(`${ENDPOINT}`, {
         method: 'POST',
         headers: {
@@ -150,8 +150,8 @@
           "query": "mutation Login($input: LoginInput!) { login(input: $input) {token}}",
           "variables": {
             "input": {
-              "username": "dparchment",
-              "password": "$kyvibe"
+              "username": "",
+              "password": ""
             }
           }
         }),
@@ -162,7 +162,7 @@
 
       ## For Dev Development
       1. Create a new connection
-      2. Set the url to: http://api.dev.skyvibe.io/graphql
+      2. Set the url to: https://api.dev.skyvibe.io/graphql
       3. Add shared headers (shouldn't have to if already added shared headers)
         1. sky-app / portal
         2. Authorization / Bearer {% raw %}{{ token }}{% endraw %}
@@ -181,8 +181,8 @@
           "query": "mutation Login($input: LoginInput!) { login(input: $input) {token}}",
           "variables": {
             "input": {
-              "username": "dparchment",
-              "password": "$kyvibe"
+              "username": "",
+              "password": ""
             }
           }
         }),
@@ -193,7 +193,7 @@
 
       ## For Stage Development
       1. Create a new connection
-      2. Set the url to: http://api.stage.skyvibe.io/graphql
+      2. Set the url to: https://api.stage.skyvibe.io/graphql
       3. Add shared headers (shouldn't have to if already added shared headers)
         1. sky-app / portal
         2. Authorization / Bearer {% raw %}{{ token }}{% endraw %}
@@ -212,8 +212,8 @@
           "query": "mutation Login($input: LoginInput!) { login(input: $input) {token}}",
           "variables": {
             "input": {
-              "username": "dparchment",
-              "password": "$kyvibe"
+              "username": "",
+              "password": ""
             }
           }
         }),

@@ -1,4 +1,4 @@
-go_version: "1.20.14"
+go_version: "1.24.12"
 go_tarball: "go{{ go_version }}.darwin-{{ 'arm64' if ansible_facts['architecture'] == 'arm64' else 'amd64' }}.tar.gz"
 go_url: "https://go.dev/dl/{{ go_tarball }}"
 go_install_dir: "/usr/local/go"

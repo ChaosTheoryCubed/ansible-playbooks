@@ -19,3 +19,4 @@
 127.0.0.1 report-api
 127.0.0.1 notification-api
 127.0.0.1 user-punch-worker
+127.0.0.1 activity-api

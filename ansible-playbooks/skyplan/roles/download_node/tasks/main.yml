@@ -41,12 +41,12 @@
       [ -s "$(brew --prefix nvm)/nvm.sh" ] && \. "$(brew --prefix nvm)/nvm.sh"
     marker: "# {mark} ANSIBLE MANAGED BLOCK: NVM INIT"
 
-- name: Install Node.js 18.9.0 via NVM using Zsh
+- name: Install Node.js 24 via NVM using Zsh
   shell: |
     export NVM_DIR="$HOME/.nvm"
     source "$(brew --prefix nvm)/nvm.sh"
-    nvm install 18.9.0
-    nvm alias default 18.9.0
+    nvm install 24.12.0
+    nvm alias default 24.12.0
   args:
     executable: /bin/zsh
   environment:
