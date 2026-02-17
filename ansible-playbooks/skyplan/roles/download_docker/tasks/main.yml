@@ -3,7 +3,10 @@
   stat:
     path: /Applications/Docker.app
   register: docker_app
-  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: Debug Docker app status
+  debug:
+    msg: "Docker.app exists: {{ docker_app.stat.exists }}"
 
 - name: Ensure Homebrew is installed (Apple Silicon and Intel paths)
   stat:
@@ -28,36 +31,57 @@
     - ansible_facts['os_family'] == 'Darwin'
     - not homebrew_installed
 
-- name: Install Docker Desktop via Homebrew Cask
-  homebrew_cask:
-    name: docker
-    state: present
+- name: Install Docker Desktop via Homebrew
+  shell: |
+    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+    brew install --cask docker
+  args:
+    executable: /bin/zsh
+  register: docker_install_result
   when:
     - ansible_facts['os_family'] == 'Darwin'
     - not docker_app.stat.exists
-  register: docker_installed
+  failed_when: 
+    - docker_install_result.rc != 0
+    - "'already installed' not in docker_install_result.stderr"
+    - "'already installed' not in docker_install_result.stdout"
+  changed_when: docker_install_result.rc == 0
 
-- name: Accept Docker Desktop license agreement automatically
-  shell: |
-    /Applications/Docker.app/Contents/MacOS/Docker --accept-license --unattended
+- name: Wait a moment after Docker installation
+  pause:
+    seconds: 5
   when:
     - ansible_facts['os_family'] == 'Darwin'
-    - docker_installed is changed
-  async: 300
-  poll: 0
-  register: docker_startup
+    - docker_install_result is defined
+    - docker_install_result is not skipped
+    - docker_install_result.rc == 0
+
+- name: Verify Docker.app is installed
+  stat:
+    path: /Applications/Docker.app
+  register: docker_app_final
+
+- name: Fail if Docker.app was not installed
+  fail:
+    msg: "Docker.app was not found at /Applications/Docker.app after installation attempt"
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - not docker_app_final.stat.exists
+
+- name: Start Docker Desktop in background
+  shell: |
+    nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended > /dev/null 2>&1 &
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - docker_app_final.stat.exists
   ignore_errors: true
 
-- name: Wait a moment for Docker Desktop to initialize
+- name: Wait for Docker to initialize
   pause:
-    seconds: 10
+    seconds: 15
   when:
     - ansible_facts['os_family'] == 'Darwin'
-    - docker_installed is changed
-
-- name: Start Docker Desktop if not already running
-  shell: open -a Docker
-  when: ansible_facts['os_family'] == 'Darwin'
+    - docker_app_final.stat.exists
 
 - name: Wait for Docker daemon to be ready
   shell: docker system info > /dev/null 2>&1
@@ -66,25 +90,44 @@
   delay: 5
   until: docker_ready.rc == 0
   failed_when: false
-  when: ansible_facts['os_family'] == 'Darwin'
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - docker_app_final.stat.exists
+
+- name: Show success message if Docker is running
+  debug:
+    msg: "Docker Desktop is running successfully!"
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - docker_ready is defined
+    - docker_ready.rc == 0
 
 - name: Warn if Docker failed to start
   debug:
     msg: |
-      WARNING: Docker Desktop did not start within 300 seconds.
-      If this is the first time running Docker Desktop, it may require:
-      - Granting privileged helper permissions (system popup)
-      - Additional time to complete initialization
-      You can check Docker Desktop manually and re-run this playbook if needed.
+      ⚠️  WARNING: Docker Desktop did not start within 300 seconds.
+      
+      Common first-time setup issues:
+      1. macOS may prompt for privileged helper permissions - check for system popups
+      2. Docker Desktop may be starting in the background - check your Applications
+      3. You may need to manually open Docker Desktop and accept the license agreement
+      
+      To resolve:
+      - Open Docker Desktop from Applications folder
+      - Accept any prompts or license agreements
+      - Wait for Docker to show "Engine running" in the menu bar
+      - Re-run this playbook
   when:
     - ansible_facts['os_family'] == 'Darwin'
+    - docker_ready is defined
     - docker_ready.rc != 0
 
-- name: Fail if Docker is not running
-  fail:
-    msg: "Docker Desktop is not running after installation. Please check Docker Desktop manually, complete any required setup, then re-run the playbook."
+- name: Continue without failing if Docker not ready
+  debug:
+    msg: "Continuing playbook. You can start Docker manually and use it when ready."
   when:
     - ansible_facts['os_family'] == 'Darwin'
+    - docker_ready is defined
     - docker_ready.rc != 0
 
 - name: Check Docker Compose version
@@ -92,6 +135,7 @@
   register: compose_version
   when:
     - ansible_facts['os_family'] == 'Darwin'
+    - docker_ready is defined
     - docker_ready.rc == 0
 
 - name: Show Docker Compose version

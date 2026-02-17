@@ -30,7 +30,7 @@ fi
 # -- Configuration --
 REPO_URL="https://github.com/ChaosTheoryCubed/ansible-playbooks.git"
 WORK_DIR="$HOME/work/ansible-playbooks"
-SKYPLAN_DIR="$WORK_DIR/skyplan"
+SKYPLAN_DIR="$WORK_DIR/ansible-playbooks/skyplan"
 AUTO_RUN=false
 DRY_RUN=false
 

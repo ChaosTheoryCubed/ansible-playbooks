@@ -4,15 +4,28 @@
     state: directory
     mode: "0755"
 
-- name: Clone skyhop repos
-  ansible.builtin.git:
-    repo: "{{ item.repo }}"
-    dest: "{{ item.dest }}"
-    version: "{{ item.default_branch }}"
-    accept_hostkey: true
-    update: true
+- name: Check if repos already exist
+  stat:
+    path: "{{ item.dest }}"
   loop: "{{ repos }}"
+  register: repo_dirs
+
+- name: Clone skyhop repos (only if not already present)
+  ansible.builtin.git:
+    repo: "{{ item.item.repo }}"
+    dest: "{{ item.item.dest }}"
+    version: "{{ item.item.default_branch }}"
+    accept_hostkey: true
+    update: false
+  loop: "{{ repo_dirs.results }}"
+  when: not item.stat.exists
   retries: 3
   delay: 5
   register: git_clone_result
   until: git_clone_result is succeeded
+
+- name: Show message for existing repos
+  debug:
+    msg: "Repository already exists at {{ item.item.dest }}, skipping clone"
+  loop: "{{ repo_dirs.results }}"
+  when: item.stat.exists
