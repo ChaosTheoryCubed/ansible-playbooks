@@ -29,8 +29,8 @@ fi
 
 # -- Configuration --
 REPO_URL="https://github.com/ChaosTheoryCubed/dotfiles.git"
-DOTFILES_DIR="$HOME/work/dotfiles"
-SKYPLAN_DIR="$DOTFILES_DIR/ansible-playbooks/skyplan"
+WORK_DIR="$HOME/work"
+SKYPLAN_DIR="$WORK_DIR/ansible-playbooks/skyplan"
 AUTO_RUN=false
 DRY_RUN=false
 
@@ -67,10 +67,10 @@ run() {
 # -- Parse Arguments --
 for arg in "$@"; do
   case "$arg" in
-    --yes) AUTO_RUN=true ;;
-    --dry-run) DRY_RUN=true ;;
-    --help) usage ;;
-    *) error "Unknown option: $arg" ;;
+  --yes) AUTO_RUN=true ;;
+  --dry-run) DRY_RUN=true ;;
+  --help) usage ;;
+  *) error "Unknown option: $arg" ;;
   esac
 done
 
@@ -112,8 +112,8 @@ if [ "$OS" = "Darwin" ]; then
   mkdir -p "$HOME"
   touch "$ZPROFILE"
   if ! grep -Fq "$BREW_ENV_LINE" "$ZPROFILE" 2>/dev/null; then
-    echo >> "$ZPROFILE"
-    echo "$BREW_ENV_LINE" >> "$ZPROFILE"
+    echo >>"$ZPROFILE"
+    echo "$BREW_ENV_LINE" >>"$ZPROFILE"
     info "Added brew shellenv to $ZPROFILE"
   fi
 
@@ -187,4 +187,3 @@ else
 fi
 
 info "✅ Setup complete!"
-
