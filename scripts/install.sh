@@ -4,7 +4,7 @@ set -eu
 # -- Interactive shell validation --
 if [ ! -t 0 ]; then
   echo "❌ This script must be run in an interactive shell (not piped)."
-  echo "   Use: sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ChaosTheoryCubed/dotfiles/main/scripts/install.sh)\""
+  echo "   Use: sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ChaosTheoryCubed/ansible-playbooks/main/scripts/install.sh)\""
   echo "   Or:  curl -fsSL <url> -o install.sh && sh install.sh"
   exit 1
 fi
@@ -13,7 +13,7 @@ fi
 if [ "$(id -u)" -eq 0 ]; then
   echo "❌ Do NOT run this script with sudo or as root."
   echo "   Run it like this instead:"
-  echo "   sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ChaosTheoryCubed/dotfiles/main/scripts/install.sh)\""
+  echo "   sh -c \"\$(curl -fsSL https://raw.githubusercontent.com/ChaosTheoryCubed/ansible-playbooks/main/scripts/install.sh)\""
   exit 1
 fi
 
@@ -28,9 +28,9 @@ if ! sudo -v; then
 fi
 
 # -- Configuration --
-REPO_URL="https://github.com/ChaosTheoryCubed/dotfiles.git"
-WORK_DIR="$HOME/work"
-SKYPLAN_DIR="$WORK_DIR/ansible-playbooks/skyplan"
+REPO_URL="https://github.com/ChaosTheoryCubed/ansible-playbooks.git"
+WORK_DIR="$HOME/work/ansible-playbooks"
+SKYPLAN_DIR="$WORK_DIR/skyplan"
 AUTO_RUN=false
 DRY_RUN=false
 
@@ -79,7 +79,7 @@ echo "📦 This script will:"
 echo " - Ensure Homebrew is installed (macOS only)"
 echo " - Install Python 3 if not already available"
 echo " - Install Ansible if not already available"
-echo " - Clone your ansible playbooks to $DOTFILES_DIR"
+echo " - Clone your ansible playbooks to $WORK_DIR"
 echo " - Optionally run the Skyplan Ansible playbook"
 echo ""
 echo "ℹ️  You will be prompted for your sudo password when necessary."
@@ -101,7 +101,11 @@ info "Detected OS: $OS"
 if [ "$OS" = "Darwin" ]; then
   if ! command -v brew >/dev/null 2>&1; then
     info "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if [ "$DRY_RUN" = true ]; then
+      echo "DRY-RUN: /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+    else
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
   fi
 
   BREW_PREFIX="$(/opt/homebrew/bin/brew --prefix 2>/dev/null || /usr/local/bin/brew --prefix 2>/dev/null || true)"
@@ -109,16 +113,23 @@ if [ "$OS" = "Darwin" ]; then
   ZPROFILE="$HOME/.zprofile"
 
   # Ensure ~/.zprofile exists and contains brew shellenv
-  mkdir -p "$HOME"
-  touch "$ZPROFILE"
-  if ! grep -Fq "$BREW_ENV_LINE" "$ZPROFILE" 2>/dev/null; then
-    echo >>"$ZPROFILE"
-    echo "$BREW_ENV_LINE" >>"$ZPROFILE"
-    info "Added brew shellenv to $ZPROFILE"
-  fi
+  if [ "$DRY_RUN" = true ]; then
+    echo "DRY-RUN: mkdir -p \"$HOME\""
+    echo "DRY-RUN: touch \"$ZPROFILE\""
+    echo "DRY-RUN: Checking and adding brew shellenv to $ZPROFILE if needed"
+    echo "DRY-RUN: eval \"\$(\"$BREW_PREFIX/bin/brew\" shellenv)\""
+  else
+    mkdir -p "$HOME"
+    touch "$ZPROFILE"
+    if ! grep -Fq "$BREW_ENV_LINE" "$ZPROFILE" 2>/dev/null; then
+      echo >>"$ZPROFILE"
+      echo "$BREW_ENV_LINE" >>"$ZPROFILE"
+      info "Added brew shellenv to $ZPROFILE"
+    fi
 
-  # Activate Homebrew immediately
-  eval "$("$BREW_PREFIX/bin/brew" shellenv)"
+    # Activate Homebrew immediately
+    eval "$("$BREW_PREFIX/bin/brew" shellenv)"
+  fi
 fi
 
 # -- Step 3: Install Python --
@@ -150,24 +161,24 @@ if ! command -v ansible >/dev/null 2>&1; then
   fi
 fi
 
-# -- Step 5: Clone dotfiles repo --
-if [ ! -d "$DOTFILES_DIR" ]; then
-  info "Cloning dotfiles to $DOTFILES_DIR..."
-  DOTFILES_PARENT="$(dirname "$DOTFILES_DIR")"
-  if [ "$DRY_RUN" = true ]; then
-    echo "DRY-RUN: mkdir -p \"$DOTFILES_PARENT\""
-    echo "DRY-RUN: git clone \"$REPO_URL\" \"$DOTFILES_DIR\""
-  else
-    mkdir -p "$DOTFILES_PARENT"
-    git clone "$REPO_URL" "$DOTFILES_DIR"
-  fi
+# -- Step 5: Clone ansible-playbooks repo --
+if [ ! -d "$WORK_DIR" ]; then
+  info "Cloning ansible-playbooks to $WORK_DIR..."
+  REPO_PARENT="$(dirname "$WORK_DIR")"
+  run "mkdir -p \"$REPO_PARENT\""
+  run "git clone \"$REPO_URL\" \"$WORK_DIR\""
 else
-  info "Dotfiles already exist at $DOTFILES_DIR"
+  info "Ansible playbooks already exist at $WORK_DIR"
 fi
 
 # -- Step 6: Prompt to run Ansible playbook --
-cd "$SKYPLAN_DIR"
-info "Moved into $SKYPLAN_DIR"
+if [ "$DRY_RUN" = true ]; then
+  echo "DRY-RUN: cd \"$SKYPLAN_DIR\""
+  info "Would move into $SKYPLAN_DIR"
+else
+  cd "$SKYPLAN_DIR"
+  info "Moved into $SKYPLAN_DIR"
+fi
 
 if [ "$AUTO_RUN" = true ]; then
   RUN_PLAYBOOK="y"
