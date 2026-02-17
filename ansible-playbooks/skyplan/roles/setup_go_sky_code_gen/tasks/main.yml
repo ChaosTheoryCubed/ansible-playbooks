@@ -1,56 +1,113 @@
+---
+- name: Check if Makefile exists in go-sky/provision
+  stat:
+    path: "{{ go_sky_path }}/provision/Makefile"
+  register: provision_makefile
+
+- name: Check if Makefile exists in go-sky/proto
+  stat:
+    path: "{{ go_sky_path }}/proto/Makefile"
+  register: proto_makefile
+
+- name: Check if Makefile exists in go-sky root
+  stat:
+    path: "{{ go_sky_path }}/Makefile"
+  register: go_sky_makefile
+
 - name: Run provision code generation
   shell: |
     cd {{ go_sky_path }}/provision
     source {{ zsh_file }}
     make gen
+  args:
+    executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
   register: provision_codegen_result
   ignore_errors: true
+  when: provision_makefile.stat.exists
 
 - name: Show provision codegen stdout
   debug:
     var: provision_codegen_result.stdout_lines
+  when: provision_makefile.stat.exists
 
 - name: Show provision codegen stderr (if any)
   debug:
     var: provision_codegen_result.stderr_lines
-  when: provision_codegen_result.rc != 0
+  when: provision_makefile.stat.exists and provision_codegen_result.rc != 0
+
+- name: Warn if provision codegen failed
+  debug:
+    msg: "WARNING: Provision code generation failed. This may cause issues but continuing with setup."
+  when: provision_makefile.stat.exists and provision_codegen_result.rc != 0
 
 - name: Run proto code generation
   shell: |
     cd {{ go_sky_path }}/proto
     source {{ zsh_file }}
     make gen
+  args:
+    executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
   register: proto_codegen_result
   ignore_errors: true
+  when: proto_makefile.stat.exists
 
 - name: Show proto codegen stdout
   debug:
     var: proto_codegen_result.stdout_lines
+  when: proto_makefile.stat.exists
 
 - name: Show proto codegen stderr (if any)
   debug:
     var: proto_codegen_result.stderr_lines
-  when: proto_codegen_result.rc != 0
+  when: proto_makefile.stat.exists and proto_codegen_result.rc != 0
+
+- name: Warn if proto codegen failed
+  debug:
+    msg: "WARNING: Proto code generation failed. This may cause issues but continuing with setup."
+  when: proto_makefile.stat.exists and proto_codegen_result.rc != 0
 
 - name: Run full project generation including GraphQL
   shell: |
     cd {{ go_sky_path }}
     source {{ zsh_file }}
     make gen
+  args:
+    executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
   register: full_codegen_result
   ignore_errors: true
+  when: go_sky_makefile.stat.exists
 
 - name: Run go mod tidy
   shell: |
     cd {{ go_sky_path }}
     source {{ zsh_file }}
     go mod tidy
+  args:
+    executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
 
 - name: Show full project codegen stdout
   debug:
     var: full_codegen_result.stdout_lines
+  when: go_sky_makefile.stat.exists
 
 - name: Show full project codegen stderr (if any)
   debug:
     var: full_codegen_result.stderr_lines
-  when: full_codegen_result.rc != 0
+  when: go_sky_makefile.stat.exists and full_codegen_result.rc != 0
+
+- name: Warn if full codegen failed
+  debug:
+    msg: "WARNING: Full project code generation failed. This may cause issues but continuing with setup."
+  when: go_sky_makefile.stat.exists and full_codegen_result.rc != 0

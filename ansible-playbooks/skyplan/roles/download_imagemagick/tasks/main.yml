@@ -65,6 +65,10 @@
     dest: "/tmp/{{ imagemagick_archive }}"
     mode: "0644"
   when: not imagemagick_skip_install
+  retries: 3
+  delay: 5
+  register: imagemagick_download_result
+  until: imagemagick_download_result is succeeded
 
 - name: Extract ImageMagick tarball
   unarchive:

@@ -28,6 +28,9 @@
   args:
     chdir: "{{ go_project_path }}"
     executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"
 
 # - name: Install json2tmux via go get
 #   shell: go get github.com/ericksonjoseph/json2tmux
@@ -40,3 +43,6 @@
   args:
     chdir: "{{ go_project_path }}"
     executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+    GOPATH: "{{ ansible_env.HOME }}/go"

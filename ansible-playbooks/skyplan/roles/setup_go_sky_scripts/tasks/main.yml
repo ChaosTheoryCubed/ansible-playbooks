@@ -13,14 +13,30 @@
     msg: "The go-sky repo is not present at {{ go_sky_path }}. Make sure it was cloned first."
   when: not go_sky_dir.stat.exists
 
+- name: Check if Makefile exists in go-sky
+  stat:
+    path: "{{ go_sky_path }}/Makefile"
+  register: go_sky_makefile
+
+- name: Check if Makefile exists in go-sky/docker
+  stat:
+    path: "{{ go_sky_path }}/docker/Makefile"
+  register: go_sky_docker_makefile
+
 - name: Run make install-git-hooks in go-sky
   shell: make install-git-hooks
   args:
     chdir: "{{ go_sky_path }}"
     executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+  when: go_sky_makefile.stat.exists
 
 - name: Run make create-grafana-persistent-volume in docker/
   shell: make create-grafana-persistent-volume
   args:
     chdir: "{{ go_sky_path }}/docker"
     executable: /bin/zsh
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_env.HOME }}/go/bin:{{ ansible_env.PATH }}"
+  when: go_sky_docker_makefile.stat.exists

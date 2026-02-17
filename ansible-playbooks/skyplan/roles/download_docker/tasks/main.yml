@@ -35,30 +35,64 @@
   when:
     - ansible_facts['os_family'] == 'Darwin'
     - not docker_app.stat.exists
+  register: docker_installed
 
-- name: Start Docker Desktop (GUI)
-  shell: open -a Docker
+- name: Accept Docker Desktop license agreement automatically
+  shell: |
+    /Applications/Docker.app/Contents/MacOS/Docker --accept-license --unattended
   when:
     - ansible_facts['os_family'] == 'Darwin'
-    - docker_app.stat.exists
+    - docker_installed is changed
+  async: 300
+  poll: 0
+  register: docker_startup
+  ignore_errors: true
+
+- name: Wait a moment for Docker Desktop to initialize
+  pause:
+    seconds: 10
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - docker_installed is changed
+
+- name: Start Docker Desktop if not already running
+  shell: open -a Docker
+  when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Wait for Docker daemon to be ready
-  shell: |
-    while ! docker system info > /dev/null 2>&1; do sleep 2; done
-  retries: 10
-  delay: 5
+  shell: docker system info > /dev/null 2>&1
   register: docker_ready
+  retries: 60
+  delay: 5
   until: docker_ready.rc == 0
+  failed_when: false
+  when: ansible_facts['os_family'] == 'Darwin'
+
+- name: Warn if Docker failed to start
+  debug:
+    msg: |
+      WARNING: Docker Desktop did not start within 300 seconds.
+      If this is the first time running Docker Desktop, it may require:
+      - Granting privileged helper permissions (system popup)
+      - Additional time to complete initialization
+      You can check Docker Desktop manually and re-run this playbook if needed.
   when:
     - ansible_facts['os_family'] == 'Darwin'
-    - docker_app.stat.exists
+    - docker_ready.rc != 0
+
+- name: Fail if Docker is not running
+  fail:
+    msg: "Docker Desktop is not running after installation. Please check Docker Desktop manually, complete any required setup, then re-run the playbook."
+  when:
+    - ansible_facts['os_family'] == 'Darwin'
+    - docker_ready.rc != 0
 
 - name: Check Docker Compose version
   shell: docker compose version
   register: compose_version
   when:
     - ansible_facts['os_family'] == 'Darwin'
-    - docker_app.stat.exists
+    - docker_ready.rc == 0
 
 - name: Show Docker Compose version
   debug:

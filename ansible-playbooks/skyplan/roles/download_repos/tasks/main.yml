@@ -12,3 +12,7 @@
     accept_hostkey: true
     update: true
   loop: "{{ repos }}"
+  retries: 3
+  delay: 5
+  register: git_clone_result
+  until: git_clone_result is succeeded

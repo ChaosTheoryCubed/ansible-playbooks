@@ -1,30 +1,58 @@
 ---
+- name: Set path to portal-spa repo
+  set_fact:
+    portal_spa_path: "{{ ansible_env.HOME }}/work/portal-spa"
+
+- name: Check if portal-spa repo exists
+  stat:
+    path: "{{ portal_spa_path }}"
+  register: portal_spa_dir
+
+- name: Fail if portal-spa directory is missing
+  fail:
+    msg: "The portal-spa repo is not present at {{ portal_spa_path }}. Make sure it was cloned first."
+  when: not portal_spa_dir.stat.exists
+
+- name: Check if Makefile exists in portal-spa
+  stat:
+    path: "{{ portal_spa_path }}/Makefile"
+  register: portal_spa_makefile
+
 - name: Run make install-git-hooks in portal-spa
   shell: make install-git-hooks
   args:
-    chdir: "{{ ansible_env.HOME }}/work/portal-spa"
+    chdir: "{{ portal_spa_path }}"
+    executable: /bin/zsh
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.nvm/versions/node/v24.12.0/bin:{{ ansible_env.PATH }}"
+    NVM_DIR: "{{ ansible_env.HOME }}/.nvm"
+  when: portal_spa_makefile.stat.exists
 
 - name: Add .env file to portal-spa root
   copy:
     src: env_file
-    dest: "{{ ansible_env.HOME }}/work/portal-spa/.env"
+    dest: "{{ portal_spa_path }}/.env"
     mode: "0644"
 
 - name: Ensure config/ directory exists
   file:
-    path: "{{ ansible_env.HOME }}/work/portal-spa/config"
+    path: "{{ portal_spa_path }}/config"
     state: directory
 
 - name: Add local.js to portal-spa/config
   copy:
     src: local_js
-    dest: "{{ ansible_env.HOME }}/work/portal-spa/config/local.js"
+    dest: "{{ portal_spa_path }}/config/local.js"
     mode: "0644"
 
 - name: Run npm install in portal-spa
   shell: |
     source {{ zsh_file }}
-    cd {{ ansible_env.HOME }}/work/portal-spa
+    cd {{ portal_spa_path }}
     npm install
   args:
-    chdir: "{{ ansible_env.HOME }}/work/portal-spa"
+    chdir: "{{ portal_spa_path }}"
+    executable: /bin/zsh
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.nvm/versions/node/v24.12.0/bin:{{ ansible_env.PATH }}"
+    NVM_DIR: "{{ ansible_env.HOME }}/.nvm"

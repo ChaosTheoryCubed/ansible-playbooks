@@ -25,6 +25,10 @@
     dest: "/tmp/{{ go_tarball }}"
     mode: "0644"
     validate_certs: no
+  retries: 3
+  delay: 5
+  register: go_download_result
+  until: go_download_result is succeeded
 
 - name: Extract Go to /usr/local
   become: true
