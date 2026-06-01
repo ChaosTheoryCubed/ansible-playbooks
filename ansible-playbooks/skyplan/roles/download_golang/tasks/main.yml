@@ -1,6 +1,6 @@
 ---
 - name: Ensure curl and tar are installed (macOS only)
-  homebrew:
+  community.general.homebrew:
     name: "{{ item }}"
     state: present
   loop:
@@ -9,18 +9,18 @@
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Uninstall Homebrew Go (if exists)
-  homebrew:
+  community.general.homebrew:
     name: go
     state: absent
 
 - name: Remove existing Go installation (if any)
   become: true
-  file:
+  ansible.builtin.file:
     path: "{{ go_install_dir }}"
     state: absent
 
 - name: Download Go {{ go_version }} tarball
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ go_url }}"
     dest: "/tmp/{{ go_tarball }}"
     mode: "0644"
@@ -31,33 +31,33 @@
 
 - name: Extract Go to /usr/local
   become: true
-  unarchive:
+  ansible.builtin.unarchive:
     src: "/tmp/{{ go_tarball }}"
     dest: "/usr/local"
-    remote_src: yes
+    remote_src: true
 
 - name: Ensure Go is in PATH (system binary)
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ ansible_env.HOME }}/.zshrc"
     line: 'export PATH="$PATH:/usr/local/go/bin"'
     insertafter: EOF
     state: present
 
 - name: Ensure GOPATH/bin is in PATH
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ ansible_env.HOME }}/.zshrc"
     line: 'export PATH="$PATH:{{ ansible_env.HOME }}/go/bin"'
     insertafter: EOF
     state: present
 
 - name: Create GOPATH bin directory
-  file:
+  ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/go/bin"
     state: directory
     mode: "0755"
 
 - name: Verify Go version
-  shell: |
+  ansible.builtin.shell: |
     source ~/.zshrc
     go version
   args:
@@ -66,5 +66,5 @@
   changed_when: false
 
 - name: Output active Go version
-  debug:
+  ansible.builtin.debug:
     var: go_version_result.stdout

@@ -1,5 +1,5 @@
 - name: Install ZSH
-  include_tasks: install.yml
+  ansible.builtin.include_tasks: install.yml
 
 - name: Setup Environment Variables
-  include_tasks: setup_env.yml
+  ansible.builtin.include_tasks: setup_env.yml

@@ -5,7 +5,7 @@
     mode: "0755"
 
 - name: Check if repos already exist
-  stat:
+  ansible.builtin.stat:
     path: "{{ item.dest }}"
   loop: "{{ repos }}"
   register: repo_dirs
@@ -25,7 +25,7 @@
   until: git_clone_result is succeeded
 
 - name: Show message for existing repos
-  debug:
+  ansible.builtin.debug:
     msg: "Repository already exists at {{ item.item.dest }}, skipping clone"
   loop: "{{ repo_dirs.results }}"
   when: item.stat.exists

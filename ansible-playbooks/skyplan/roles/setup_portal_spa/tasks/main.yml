@@ -1,25 +1,25 @@
 ---
 - name: Set path to portal-spa repo
-  set_fact:
+  ansible.builtin.set_fact:
     portal_spa_path: "{{ ansible_env.HOME }}/work/portal-spa"
 
 - name: Check if portal-spa repo exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ portal_spa_path }}"
   register: portal_spa_dir
 
 - name: Fail if portal-spa directory is missing
-  fail:
+  ansible.builtin.fail:
     msg: "The portal-spa repo is not present at {{ portal_spa_path }}. Make sure it was cloned first."
   when: not portal_spa_dir.stat.exists
 
 - name: Check if Makefile exists in portal-spa
-  stat:
+  ansible.builtin.stat:
     path: "{{ portal_spa_path }}/Makefile"
   register: portal_spa_makefile
 
 - name: Run make install-git-hooks in portal-spa
-  shell: make install-git-hooks
+  ansible.builtin.shell: make install-git-hooks
   args:
     chdir: "{{ portal_spa_path }}"
     executable: /bin/zsh
@@ -29,24 +29,24 @@
   when: portal_spa_makefile.stat.exists
 
 - name: Add .env file to portal-spa root
-  copy:
+  ansible.builtin.copy:
     src: env_file
     dest: "{{ portal_spa_path }}/.env"
     mode: "0644"
 
 - name: Ensure config/ directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ portal_spa_path }}/config"
     state: directory
 
 - name: Add local.js to portal-spa/config
-  copy:
+  ansible.builtin.copy:
     src: local_js
     dest: "{{ portal_spa_path }}/config/local.js"
     mode: "0644"
 
 - name: Run npm install in portal-spa
-  shell: |
+  ansible.builtin.shell: |
     source {{ zsh_file }}
     cd {{ portal_spa_path }}
     npm install

@@ -1,8 +1,8 @@
 - name: Include OS-specific install file
-  include_tasks: "install_{{ ansible_facts['os_family'] | lower }}.yml"
+  ansible.builtin.include_tasks: "install_{{ ansible_facts['os_family'] | lower }}.yml"
   when: ansible_facts['os_family'] in ['Darwin']
 
 - name: Fail if OS family is unsupported
-  fail:
+  ansible.builtin.fail:
     msg: "Unsupported OS family for ZSH setup: {{ ansible_facts['os_family'] }}"
   when: ansible_facts['os_family'] not in ['Darwin']

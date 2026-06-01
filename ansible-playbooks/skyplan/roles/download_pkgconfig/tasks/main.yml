@@ -1,6 +1,6 @@
 ---
 - name: Check if Homebrew is installed (Intel and Apple Silicon)
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   loop:
     - /opt/homebrew/bin/brew
@@ -9,12 +9,12 @@
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Set fact for Homebrew installation status
-  set_fact:
+  ansible.builtin.set_fact:
     homebrew_installed: "{{ homebrew_paths.results | selectattr('stat.exists', 'equalto', true) | list | length > 0 }}"
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Homebrew if not installed
-  shell: |
+  ansible.builtin.shell: |
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     executable: /bin/zsh
@@ -23,7 +23,7 @@
     - not homebrew_installed
 
 - name: Install pkg-config via Homebrew
-  homebrew:
+  community.general.homebrew:
     name: pkg-config
     state: present
   when: ansible_facts['os_family'] == 'Darwin'

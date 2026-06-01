@@ -1,5 +1,5 @@
 - name: Ensure ~/.ssh directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ ssh_key_path | dirname }}"
     state: directory
     mode: "0700"
@@ -7,7 +7,7 @@
   become: false
 
 - name: Generate SSH keypair
-  openssh_keypair:
+  community.crypto.openssh_keypair:
     path: "{{ ssh_key_path }}"
     type: ed25519
     comment: "{{ ssh_key_comment }}"

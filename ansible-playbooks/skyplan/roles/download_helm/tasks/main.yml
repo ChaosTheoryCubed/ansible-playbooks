@@ -1,5 +1,5 @@
 ---
 - name: Ensure helm is installed
-  homebrew:
+  community.general.homebrew:
     name: helm
     state: present

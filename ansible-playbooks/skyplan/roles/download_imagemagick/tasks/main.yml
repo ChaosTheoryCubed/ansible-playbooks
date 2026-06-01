@@ -1,6 +1,6 @@
 ---
 - name: Ensure Homebrew is installed (Intel and Apple Silicon)
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   loop:
     - /opt/homebrew/bin/brew
@@ -9,12 +9,12 @@
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Set fact for Homebrew installation status
-  set_fact:
+  ansible.builtin.set_fact:
     homebrew_installed: "{{ homebrew_paths.results | selectattr('stat.exists', 'equalto', true) | list | length > 0 }}"
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Homebrew if not installed
-  shell: |
+  ansible.builtin.shell: |
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     executable: /bin/zsh
@@ -24,24 +24,24 @@
 
 # 🧪 Check if ImageMagick is already installed
 - name: Check if ImageMagick is installed
-  command: magick -version
+  ansible.builtin.command: magick -version
   register: imagemagick_version_check
   changed_when: false
   failed_when: false
 
 - name: Set skip flag if ImageMagick is installed and version is sufficient
-  set_fact:
+  ansible.builtin.set_fact:
     imagemagick_skip_install: "{{ imagemagick_version_check.stdout is search('ImageMagick') }}"
   when: imagemagick_version_check.rc == 0
 
 - name: Set default skip flag if not already defined
-  set_fact:
+  ansible.builtin.set_fact:
     imagemagick_skip_install: false
   when: imagemagick_skip_install is not defined
 
 # 📦 Install Dependencies
 - name: Ensure ImageMagick dependencies are installed via Homebrew
-  homebrew:
+  community.general.homebrew:
     name:
       - jpeg
       - libpng
@@ -60,7 +60,7 @@
 
 # ⬇️ Download and Build ImageMagick
 - name: Download ImageMagick source tarball
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ imagemagick_url }}"
     dest: "/tmp/{{ imagemagick_archive }}"
     mode: "0644"
@@ -71,22 +71,22 @@
   until: imagemagick_download_result is succeeded
 
 - name: Extract ImageMagick tarball
-  unarchive:
+  ansible.builtin.unarchive:
     src: "/tmp/{{ imagemagick_archive }}"
     dest: /tmp
-    remote_src: yes
+    remote_src: true
     creates: "/tmp/{{ imagemagick_src_dir }}"
   when: not imagemagick_skip_install
 
 - name: Clean previous build artifacts if any
-  shell: make distclean || true
+  ansible.builtin.shell: make distclean || true
   args:
     chdir: "/tmp/{{ imagemagick_src_dir }}"
     executable: /bin/zsh
   when: not imagemagick_skip_install
 
 - name: Configure ImageMagick source without JXL
-  shell: |
+  ansible.builtin.shell: |
     export LDFLAGS="-L/opt/homebrew/lib -L/usr/local/lib"
     export CPPFLAGS="-I/opt/homebrew/include -I/usr/local/include"
     export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:/usr/local/lib/pkgconfig"
@@ -101,7 +101,7 @@
   when: not imagemagick_skip_install
 
 - name: Compile ImageMagick
-  shell: make -j 4
+  ansible.builtin.shell: make -j 4
   args:
     chdir: "/tmp/{{ imagemagick_src_dir }}"
     executable: /bin/zsh
@@ -109,7 +109,7 @@
 
 - name: Install ImageMagick
   become: true
-  shell: make install
+  ansible.builtin.shell: make install
   args:
     chdir: "/tmp/{{ imagemagick_src_dir }}"
     executable: /bin/zsh

@@ -1,10 +1,10 @@
 - name: Test SSH authentication to Git server
-  shell: |
+  ansible.builtin.shell: |
     ssh -o StrictHostKeyChecking=no -o BatchMode=yes -T {{ git_server_user }}@{{ git_server_host }} 2>&1 || true
   register: ssh_auth_test
   changed_when: false
   become: false
 
 - name: Determine if authenticated
-  set_fact:
+  ansible.builtin.set_fact:
     ssh_authenticated: "{{ 'successfully authenticated' in ssh_auth_test.stdout | lower }}"

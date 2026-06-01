@@ -1,8 +1,8 @@
 - name: Check if SSH key exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ ssh_key_path }}"
   register: ssh_key
 
 - name: Set fact if key exists
-  set_fact:
+  ansible.builtin.set_fact:
     ssh_key_exists: "{{ ssh_key.stat.exists }}"

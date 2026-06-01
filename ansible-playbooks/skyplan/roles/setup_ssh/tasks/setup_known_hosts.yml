@@ -1,5 +1,5 @@
 - name: Ensure known_hosts has Git server entry
-  known_hosts:
+  ansible.builtin.known_hosts:
     name: "{{ git_server_host }}"
     key: "{{ lookup('pipe', 'ssh-keyscan ' + git_server_host) }}"
     path: "{{ known_hosts_path }}"

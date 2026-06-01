@@ -1,16 +1,16 @@
 - name: Check if SSH key exists
-  include_tasks: check_key.yml
+  ansible.builtin.include_tasks: check_key.yml
 
 - name: Generate SSH key if missing
-  include_tasks: generate_key.yml
+  ansible.builtin.include_tasks: generate_key.yml
   when: not ssh_key_exists
 
 - name: Setup known_hosts for Git server
-  include_tasks: setup_known_hosts.yml
+  ansible.builtin.include_tasks: setup_known_hosts.yml
 
 - name: Test if SSH key works
-  include_tasks: test_auth.yml
+  ansible.builtin.include_tasks: test_auth.yml
 
 - name: Prompt user to add key if not authenticated
-  include_tasks: prompt_user.yml
+  ansible.builtin.include_tasks: prompt_user.yml
   when: not ssh_authenticated

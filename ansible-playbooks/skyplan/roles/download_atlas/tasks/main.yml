@@ -1,21 +1,21 @@
 ---
 - name: Check if atlas is already installed
-  command: which atlas
+  ansible.builtin.command: which atlas
   register: atlas_check
   ignore_errors: true
   changed_when: false
 
 - name: Install Atlas CLI via official installer
-  shell: curl -sSf https://atlasgo.sh | sh
+  ansible.builtin.shell: curl -sSf https://atlasgo.sh | sh
   args:
     executable: /bin/zsh
   when: atlas_check.rc != 0
 
 - name: Verify Atlas CLI is installed
-  command: atlas version
+  ansible.builtin.command: atlas version
   register: atlas_version_output
   changed_when: false
 
 - name: Show Atlas version
-  debug:
+  ansible.builtin.debug:
     var: atlas_version_output.stdout

@@ -1,6 +1,6 @@
 ---
 - name: Ensure Homebrew is installed
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   loop:
     - /opt/homebrew/bin/brew
@@ -9,12 +9,12 @@
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Set Homebrew installed flag
-  set_fact:
+  ansible.builtin.set_fact:
     homebrew_installed: "{{ homebrew_paths.results | selectattr('stat.exists', 'equalto', true) | list | length > 0 }}"
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Homebrew if not installed
-  shell: |
+  ansible.builtin.shell: |
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     executable: /bin/zsh
@@ -24,13 +24,13 @@
 
 # Visual Studio Code
 - name: Check if Visual Studio Code is installed
-  stat:
+  ansible.builtin.stat:
     path: /Applications/Visual Studio Code.app
   register: vscode_stat
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Visual Studio Code via brew cask
-  command: brew install --cask visual-studio-code
+  ansible.builtin.command: brew install --cask visual-studio-code
   register: vscode_install
   failed_when: vscode_install.rc != 0 and "'already an App' not in vscode_install.stderr"
   changed_when: vscode_install.rc == 0
@@ -40,13 +40,13 @@
 
 # Sequel Ace
 - name: Check if Sequel Ace is installed
-  stat:
+  ansible.builtin.stat:
     path: /Applications/Sequel Ace.app
   register: sequel_ace_stat
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Sequel Ace via brew cask
-  command: brew install --cask sequel-ace
+  ansible.builtin.command: brew install --cask sequel-ace
   register: sequel_ace_install
   failed_when: sequel_ace_install.rc != 0 and "'already an App' not in sequel_ace_install.stderr"
   changed_when: sequel_ace_install.rc == 0
@@ -56,14 +56,14 @@
 
 # MySQL (CLI tool, no .app)
 - name: Check if MySQL is installed
-  command: brew list mysql
+  ansible.builtin.command: brew list mysql
   register: mysql_check
   failed_when: false
   changed_when: false
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install MySQL
-  homebrew:
+  community.general.homebrew:
     name: mysql
     state: present
   when:
@@ -72,14 +72,14 @@
 
 # Tmux (CLI tool)
 - name: Check if Tmux is installed
-  command: brew list tmux
+  ansible.builtin.command: brew list tmux
   register: tmux_check
   failed_when: false
   changed_when: false
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Tmux
-  homebrew:
+  community.general.homebrew:
     name: tmux
     state: present
   when:
@@ -88,14 +88,14 @@
 
 # CTOP (CLI TOOL)
 - name: Check if CTOP is installed
-  command: brew list ctop
+  ansible.builtin.command: brew list ctop
   register: ctop_check
   failed_when: false
   changed_when: false
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install CTOP
-  homebrew:
+  community.general.homebrew:
     name: ctop
     state: present
   when:
@@ -104,14 +104,14 @@
 
 # POSTMAN
 - name: Check if Postman is installed
-  command: brew list postman
+  ansible.builtin.command: brew list postman
   register: postman_check
   failed_when: false
   changed_when: false
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Postman
-  homebrew:
+  community.general.homebrew:
     name: postman
     state: present
   when:

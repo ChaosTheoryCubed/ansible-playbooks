@@ -1,11 +1,11 @@
 - name: Ensure .zshrc file exists
-  file:
+  ansible.builtin.file:
     path: "{{ zshrc_file }}"
     state: touch
     mode: '0644'
 
 - name: Set custom environment variables in .zshrc
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: "{{ zshrc_file }}"
     marker: "# {mark} ANSIBLE MANAGED BLOCK: CUSTOM ENV VARS"
     block: |

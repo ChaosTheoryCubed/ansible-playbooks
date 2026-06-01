@@ -1,15 +1,15 @@
 ---
 - name: Check if Docker.app is installed
-  stat:
+  ansible.builtin.stat:
     path: /Applications/Docker.app
   register: docker_app
 
 - name: Debug Docker app status
-  debug:
+  ansible.builtin.debug:
     msg: "Docker.app exists: {{ docker_app.stat.exists }}"
 
 - name: Ensure Homebrew is installed (Apple Silicon and Intel paths)
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   loop:
     - /opt/homebrew/bin/brew
@@ -18,12 +18,12 @@
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Set Homebrew installed flag
-  set_fact:
+  ansible.builtin.set_fact:
     homebrew_installed: "{{ homebrew_paths.results | selectattr('stat.exists', 'equalto', true) | list | length > 0 }}"
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Homebrew if not installed
-  shell: |
+  ansible.builtin.shell: |
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     executable: /bin/zsh
@@ -32,7 +32,7 @@
     - not homebrew_installed
 
 - name: Install Docker Desktop via Homebrew
-  shell: |
+  ansible.builtin.shell: |
     export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
     brew install --cask docker
   args:
@@ -48,7 +48,7 @@
   changed_when: docker_install_result.rc == 0
 
 - name: Wait a moment after Docker installation
-  pause:
+  ansible.builtin.pause:
     seconds: 5
   when:
     - ansible_facts['os_family'] == 'Darwin'
@@ -57,19 +57,19 @@
     - docker_install_result.rc == 0
 
 - name: Verify Docker.app is installed
-  stat:
+  ansible.builtin.stat:
     path: /Applications/Docker.app
   register: docker_app_final
 
 - name: Fail if Docker.app was not installed
-  fail:
+  ansible.builtin.fail:
     msg: "Docker.app was not found at /Applications/Docker.app after installation attempt"
   when:
     - ansible_facts['os_family'] == 'Darwin'
     - not docker_app_final.stat.exists
 
 - name: Start Docker Desktop in background
-  shell: |
+  ansible.builtin.shell: |
     nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended > /dev/null 2>&1 &
   when:
     - ansible_facts['os_family'] == 'Darwin'
@@ -77,14 +77,14 @@
   ignore_errors: true
 
 - name: Wait for Docker to initialize
-  pause:
+  ansible.builtin.pause:
     seconds: 15
   when:
     - ansible_facts['os_family'] == 'Darwin'
     - docker_app_final.stat.exists
 
 - name: Wait for Docker daemon to be ready
-  shell: docker system info > /dev/null 2>&1
+  ansible.builtin.shell: docker system info > /dev/null 2>&1
   register: docker_ready
   retries: 60
   delay: 5
@@ -95,7 +95,7 @@
     - docker_app_final.stat.exists
 
 - name: Show success message if Docker is running
-  debug:
+  ansible.builtin.debug:
     msg: "Docker Desktop is running successfully!"
   when:
     - ansible_facts['os_family'] == 'Darwin'
@@ -103,7 +103,7 @@
     - docker_ready.rc == 0
 
 - name: Warn if Docker failed to start
-  debug:
+  ansible.builtin.debug:
     msg: |
       ⚠️  WARNING: Docker Desktop did not start within 300 seconds.
       
@@ -123,7 +123,7 @@
     - docker_ready.rc != 0
 
 - name: Continue without failing if Docker not ready
-  debug:
+  ansible.builtin.debug:
     msg: "Continuing playbook. You can start Docker manually and use it when ready."
   when:
     - ansible_facts['os_family'] == 'Darwin'
@@ -131,7 +131,7 @@
     - docker_ready.rc != 0
 
 - name: Check Docker Compose version
-  shell: docker compose version
+  ansible.builtin.shell: docker compose version
   register: compose_version
   when:
     - ansible_facts['os_family'] == 'Darwin'
@@ -139,6 +139,6 @@
     - docker_ready.rc == 0
 
 - name: Show Docker Compose version
-  debug:
+  ansible.builtin.debug:
     var: compose_version.stdout
   when: compose_version is defined

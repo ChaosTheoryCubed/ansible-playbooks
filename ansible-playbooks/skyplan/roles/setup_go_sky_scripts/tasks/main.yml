@@ -1,30 +1,30 @@
 ---
 - name: Set path to go-sky repo
-  set_fact:
+  ansible.builtin.set_fact:
     go_sky_path: "{{ ansible_env.HOME }}/work/go-sky"
 
 - name: Check if go-sky repo exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ go_sky_path }}"
   register: go_sky_dir
 
 - name: Fail if go-sky directory is missing
-  fail:
+  ansible.builtin.fail:
     msg: "The go-sky repo is not present at {{ go_sky_path }}. Make sure it was cloned first."
   when: not go_sky_dir.stat.exists
 
 - name: Check if Makefile exists in go-sky
-  stat:
+  ansible.builtin.stat:
     path: "{{ go_sky_path }}/Makefile"
   register: go_sky_makefile
 
 - name: Check if Makefile exists in go-sky/docker
-  stat:
+  ansible.builtin.stat:
     path: "{{ go_sky_path }}/docker/Makefile"
   register: go_sky_docker_makefile
 
 - name: Run make install-git-hooks in go-sky
-  shell: make install-git-hooks
+  ansible.builtin.shell: make install-git-hooks
   args:
     chdir: "{{ go_sky_path }}"
     executable: /bin/zsh
@@ -33,7 +33,7 @@
   when: go_sky_makefile.stat.exists
 
 - name: Run make create-grafana-persistent-volume in docker/
-  shell: make create-grafana-persistent-volume
+  ansible.builtin.shell: make create-grafana-persistent-volume
   args:
     chdir: "{{ go_sky_path }}/docker"
     executable: /bin/zsh

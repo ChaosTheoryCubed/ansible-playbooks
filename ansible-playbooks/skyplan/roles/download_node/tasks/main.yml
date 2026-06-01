@@ -1,6 +1,6 @@
 ---
 - name: Check if Homebrew is installed (Apple Silicon and Intel paths)
-  stat:
+  ansible.builtin.stat:
     path: "{{ item }}"
   loop:
     - /opt/homebrew/bin/brew
@@ -9,12 +9,12 @@
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Set fact for Homebrew installation status
-  set_fact:
+  ansible.builtin.set_fact:
     homebrew_installed: "{{ homebrew_paths.results | selectattr('stat.exists', 'equalto', true) | list | length > 0 }}"
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Install Homebrew if not installed
-  shell: |
+  ansible.builtin.shell: |
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     executable: /bin/zsh
@@ -23,18 +23,18 @@
     - not homebrew_installed
 
 - name: Install NVM via Homebrew
-  homebrew:
+  community.general.homebrew:
     name: nvm
     state: present
   when: ansible_facts['os_family'] == 'Darwin'
 
 - name: Ensure NVM directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ ansible_env.HOME }}/.nvm"
     state: directory
 
 - name: Add NVM init block to .zshrc
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: "{{ ansible_env.HOME }}/.zshrc"
     block: |
       export NVM_DIR="$HOME/.nvm"
@@ -42,7 +42,7 @@
     marker: "# {mark} ANSIBLE MANAGED BLOCK: NVM INIT"
 
 - name: Install Node.js 24 via NVM using Zsh
-  shell: |
+  ansible.builtin.shell: |
     export NVM_DIR="$HOME/.nvm"
     source "$(brew --prefix nvm)/nvm.sh"
     nvm install 24.12.0
@@ -54,7 +54,7 @@
   changed_when: false
 
 - name: Verify Node.js is installed
-  shell: |
+  ansible.builtin.shell: |
     export NVM_DIR="$HOME/.nvm"
     source "$(brew --prefix nvm)/nvm.sh"
     node -v
@@ -63,5 +63,5 @@
   register: node_version_check
 
 - name: Debug node version
-  debug:
+  ansible.builtin.debug:
     var: node_version_check.stdout

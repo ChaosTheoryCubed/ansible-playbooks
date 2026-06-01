@@ -1,20 +1,20 @@
 ---
 - name: Set Go project path
-  set_fact:
+  ansible.builtin.set_fact:
     go_project_path: "{{ ansible_env.HOME }}/work/go-sky"
 
 - name: Ensure go.mod exists in project path
-  stat:
+  ansible.builtin.stat:
     path: "{{ go_project_path }}/go.mod"
   register: gomod_check
 
 - name: Fail if go.mod is not found (repo may not be cloned)
-  fail:
+  ansible.builtin.fail:
     msg: "go.mod not found at {{ go_project_path }}. Ensure the go-sky repo is cloned first."
   when: not gomod_check.stat.exists
 
 - name: Install Go tools using 'go install'
-  shell: |
+  ansible.builtin.shell: |
     go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.19.0
     go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.20.0
     go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
@@ -39,7 +39,7 @@
 #     executable: /bin/zsh
 
 - name: Install json2tmux binary
-  shell: go install github.com/ericksonjoseph/json2tmux@latest
+  ansible.builtin.shell: go install github.com/ericksonjoseph/json2tmux@latest
   args:
     chdir: "{{ go_project_path }}"
     executable: /bin/zsh

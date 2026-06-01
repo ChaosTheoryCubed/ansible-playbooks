@@ -4,53 +4,53 @@
 
   tasks:
     - name: Setup ZSH
-      include_role:
+      ansible.builtin.include_role:
         name: download_zsh
     - name: Setup SSH For Git and Github
-      include_role:
+      ansible.builtin.include_role:
         name: setup_ssh
     - name: Clone SkyHop Repos
-      include_role:
+      ansible.builtin.include_role:
         name: download_repos
     - name: Install Node.js
-      include_role:
+      ansible.builtin.include_role:
         name: download_node
     - name: Setup dev environment
-      include_role:
+      ansible.builtin.include_role:
         name: setup_portal_spa
     - name: Setup local hosts
-      include_role:
+      ansible.builtin.include_role:
         name: update_hosts
     - name: Install Go 1.24.12
-      include_role:
+      ansible.builtin.include_role:
         name: download_golang
     - name: Install Docker and Docker Compose on macOS
-      include_role:
+      ansible.builtin.include_role:
         name: download_docker
     - name: Install Proto and Buf tools
-      include_role:
+      ansible.builtin.include_role:
         name: download_proto
     - name: Install Atlas CLI
-      include_role:
+      ansible.builtin.include_role:
         name: download_atlas
     - name: Install pkg-config
-      include_role:
+      ansible.builtin.include_role:
         name: download_pkgconfig
     - name: Install ImageMagick from source
-      include_role:
+      ansible.builtin.include_role:
         name: download_imagemagick
     - name: Install Helm v3.6.3
-      include_role:
+      ansible.builtin.include_role:
         name: download_helm
     - name: Install Go CLI tools
-      include_role:
+      ansible.builtin.include_role:
         name: download_go_tools
     - name: Install VSCode, SQL Ace, Tmux, and MYSQL
-      include_role:
+      ansible.builtin.include_role:
         name: download_devtools
     - name: Setup Go Sky Repo (Part 1 - Scripts)
-      include_role:
+      ansible.builtin.include_role:
         name: setup_go_sky_scripts
     - name: Setup Go Sky Repo (Part 2 - Code Generation)
-      include_role:
+      ansible.builtin.include_role:
         name: setup_go_sky_code_gen
