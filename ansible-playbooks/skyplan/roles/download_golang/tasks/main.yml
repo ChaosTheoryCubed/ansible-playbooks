@@ -24,7 +24,6 @@
     url: "{{ go_url }}"
     dest: "/tmp/{{ go_tarball }}"
     mode: "0644"
-    validate_certs: no
   retries: 3
   delay: 5
   register: go_download_result
@@ -36,7 +35,6 @@
     src: "/tmp/{{ go_tarball }}"
     dest: "/usr/local"
     remote_src: yes
-    extra_opts: ["--strip-components=1"]
 
 - name: Ensure Go is in PATH (system binary)
   lineinfile:
